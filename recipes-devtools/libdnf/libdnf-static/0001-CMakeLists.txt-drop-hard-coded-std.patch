@@ -1,0 +1,30 @@
+From a81a659b0f6e57a88bc6f05142f1aeba6e63fb29 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Wed, 28 Jun 2023 14:33:47 +0000
+Subject: [PATCH] CMakeLists.txt: drop hard coded 'std'
+
+Need to match what is used in rpm-ostree or we will get segfaults.
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0dbfadbc..8b4e281f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -116,8 +116,8 @@ endif()
+ 
+ # compiler options
+ add_compile_options(-Wcast-align -Wno-uninitialized -Wredundant-decls -Wwrite-strings -Wformat-nonliteral -Wmissing-format-attribute -Wsign-compare -Wtype-limits -Wuninitialized -Wall -Wl,--as-needed)
+-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wmissing-prototypes -Waggregate-return -Wshadow -Werror=implicit-function-declaration")
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wmissing-declarations")
++set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-prototypes -Waggregate-return -Wshadow -Werror=implicit-function-declaration")
++set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wmissing-declarations")
+ 
+ # apple: turn rpath off
+ set(CMAKE_MACOSX_RPATH 0)
+-- 
+2.35.5
+

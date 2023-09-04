@@ -1,0 +1,104 @@
+From 42ffc3682e626f1989c61f4e9fe2de1a19afd6f0 Mon Sep 17 00:00:00 2001
+From: Peter Bergin <peter.bergin@windriver.com>
+Date: Thu, 25 May 2023 15:18:48 +0200
+Subject: [PATCH] rust: adapt build system for yocto
+
+Avoid building libdnf-sys in rpm-ostree and use from sysroot instead.
+Inject variables from Yocto to cargo build in Makefile in order to
+succeed with the build. Variables ending with _EXT are exported from
+bitbake recipe.
+
+Upstream-Status: Pending
+
+Signed-off-by: Peter Bergin <peter.bergin@windriver.com>
+---
+ Makefile-rpm-ostree.am   |  6 +++---
+ rust/libdnf-sys/build.rs | 41 ++++------------------------------------
+ 2 files changed, 7 insertions(+), 40 deletions(-)
+
+diff --git a/Makefile-rpm-ostree.am b/Makefile-rpm-ostree.am
+index 2ef84f83..0236cdf9 100644
+--- a/Makefile-rpm-ostree.am
++++ b/Makefile-rpm-ostree.am
+@@ -102,14 +102,14 @@ endif
+ cargo_build += $(if $(RUST_FEATURES),--features $(RUST_FEATURES))
+ 
+ if RUST_DEBUG
+-cargo_target_dir=debug
++cargo_target_dir=$(CARGO_TARGET_DIR_EXT)
+ else
+-cargo_target_dir=release
++cargo_target_dir=$(CARGO_TARGET_DIR_EXT)
+ endif
+ # FIXME - build all this code in a rpmostree-sys crate, or just move all the C/C++ build
+ # to Rust.  Currently this forces build system serialization
+ cargo-build: librpmostreeinternals.la
+-	$(cargo_build) $(CARGO_RELEASE_ARGS)
++	$(cargo_build) $(CARGO_RELEASE_ARGS) $(CARGO_RELEASE_ARGS_EXT)
+ 	ln -sfr target/$(cargo_target_dir)/rpm-ostree rpm-ostree
+ CLEANFILES += rpm-ostree
+ .PHONY: cargo-build
+diff --git a/rust/libdnf-sys/build.rs b/rust/libdnf-sys/build.rs
+index 303e8a44..379bc4b5 100644
+--- a/rust/libdnf-sys/build.rs
++++ b/rust/libdnf-sys/build.rs
+@@ -1,52 +1,19 @@
+ // SPDX-License-Identifier: Apache-2.0 OR MIT
+ use anyhow::Result;
++use std::env;
+ 
+ fn main() -> Result<()> {
+     let libs = system_deps::Config::new().probe()?;
+     let has_gpgme_pkgconfig = libs.get_by_name("gpgme").is_some();
+-    let with_zck: u8 = libs.get_by_name("zck").is_some().into();
+-    let with_rhsm = std::env::var_os("CARGO_FEATURE_RHSM").is_some();
++    let staging_libdir = env::var("STAGING_LIBDIR").unwrap();
+ 
+-    // first, the submodule proper
+-    let libdnf = cmake::Config::new("../../libdnf")
+-        // Needed for hardened builds
+-        .cxxflag("-fPIC")
+-        // I picked /usr/libexec/rpm-ostree just because we need an
+-        // arbitrary path - we don't actually install there.
+-        .define("CMAKE_INSTALL_PREFIX:PATH", "/usr/libexec/rpm-ostree")
+-        .define(
+-            "INCLUDE_INSTALL_DIR:PATH",
+-            "/usr/libexec/rpm-ostree/include",
+-        )
+-        .define("LIB_INSTALL_DIR:PATH", "/usr/libexec/rpm-ostree")
+-        .define("SYSCONF_INSTALL_DIR:PATH", "/usr/libexec/rpm-ostree/etc")
+-        .define("SHARE_INSTALL_PREFIX:PATH", "/usr/libexec/rpm-ostree/share")
+-        .define("ENABLE_STATIC:BOOL", "1")
+-        .define("CMAKE_POSITION_INDEPENDENT_CODE", "ON")
+-        // We don't need docs
+-        .define("WITH_HTML:BOOL", "0")
+-        .define("WITH_MAN:BOOL", "0")
+-        .define(
+-            "ENABLE_RHSM_SUPPORT:BOOL",
+-            if with_rhsm { "1" } else { "0" },
+-        )
+-        // Auto-enable zchunk, if present
+-        .define("WITH_ZCHUNK:BOOL", format!("{}", with_zck))
+-        // Don't need bindings
+-        .define("WITH_BINDINGS:BOOL", "0")
+-        // Needed in Koji at least because timestamps(?)
+-        // cause cmake to rerun without our -D flags which
+-        // breaks the build.
+-        .always_configure(false)
+-        .build_target("all")
+-        .build();
+     // NOTE(lucab): consider using `gpgme-config` it this stops working.
+     if !has_gpgme_pkgconfig {
+         println!("cargo:rustc-link-lib=gpgme");
+     }
+     println!(
+-        "cargo:rustc-link-search=native={}/build/libdnf",
+-        libdnf.display()
++        "cargo:rustc-link-search=native={}",
++        staging_libdir
+     );
+     println!("cargo:rustc-link-lib=static=dnf");
+     println!("cargo:rustc-link-lib=glib-2.0");
+-- 
+2.34.1
+

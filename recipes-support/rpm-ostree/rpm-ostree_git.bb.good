@@ -1,0 +1,113 @@
+SUMMARY = "Hybrid image/package system with atomic upgrades and package layering"
+DESCRIPTION = "rpm-ostree is a hybrid image/package system. It uses libOSTree as a base \
+image format, and accepts RPM on both the client and server side, sharing code with the \
+dnf project; specifically libdnf."
+HOMEPAGE = "https://rpm-ostree.readthedocs.io"
+LICENSE = "GPL-2.0-or-later & LGPL-2.1-or-later & (MIT | Apache-2.0)"
+
+LIC_FILES_CHKSUM = " \
+    file://LICENSE;md5=01a124896c40fcd477634ecc07d7efa1 \
+    file://COPYING.GPL;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
+    file://COPYING.LGPL;md5=5f30f0716dfdd0d91eb439ebec522ec2 \
+    file://rust/LICENSE-APACHE;md5=fa818a259cbed7ce8bc2a22d35a464fc \
+    file://rust/LICENSE-MIT;md5=9152d879b12a7de6fffad891fb1fd9c3 \
+    "
+
+DEPENDS = " \
+    python3-native \
+    bash-completion \
+    docbook-xsl-stylesheets-native \
+    glib-2.0 \
+    gpgme \
+    json-c \
+    json-glib \
+    libcheck \
+    libdnf-static \
+    libmodulemd \
+    librepo \
+    libsolv \
+    libxslt-native \
+    ostree \
+    polkit \
+    rpm \
+    zchunk \
+    "
+
+SRCREV = "577b386d2ce120ba75961065faa0744ba4659471"
+PV = "v2023.4"
+SRC_URI += " \
+    gitsm://github.com/coreos/rpm-ostree;branch=main;protocol=https \
+    file://0001-Cargo.toml-remove-panic-setting.patch \
+    file://0002-rust-adapt-build-system-for-yocto.patch \
+    "
+
+include rpm-ostree-crates.inc
+
+UPSTREAM_CHECK_GITTAGREGEX = "v(?P<pver>\d+\.\d+)"
+
+S = "${WORKDIR}/git"
+
+# class autotools-brokensep *must* be inherited after cargo class to get correct setting of B
+inherit pkgconfig
+inherit systemd
+inherit features_check
+inherit gettext
+inherit gtk-doc
+inherit cargo
+inherit cargo-update-recipe-crates
+inherit autotools-brokensep
+inherit autotools
+inherit gobject-introspection
+
+SYSTEMD_SERVICE:${PN} = " \
+    rpm-ostree-bootstatus.service \
+    rpm-ostree-countme.service \
+    rpm-ostree-countme.timer \
+    rpm-ostreed-automatic.service \
+    rpm-ostreed-automatic.timer \
+    rpm-ostreed.service \
+    "
+
+EXTRA_OECONF:append = " --disable-bin-unit-tests --disable-gtk-doc-html"
+
+# usrmerge is needed because 'make install' assumes '/usr/lib' and likes
+REQUIRED_DISTRO_FEATURES = "polkit systemd usrmerge"
+
+do_configure() {
+    # Need to use ||true as this is only needed if configure.ac both exists
+    # and uses GTK_DOC_CHECK.
+    gtkdocize --srcdir ${S} --docdir ${GTKDOC_DOCDIR} || true
+
+    cargo_common_do_configure
+
+    # Fix from autogen.sh
+    ln -sf Makefile-libglnx.am ${S}/libglnx/Makefile-libglnx.am.inc
+
+    setup_environment
+
+    autotools_do_configure
+}
+
+setup_environment() {
+    # cargo is called from Makefile and environment is needed
+    oe_cargo_fix_env
+    export RUSTFLAGS="${RUSTFLAGS}"
+
+    # Variables introduced in patch to Makefile to pass information to build system
+    export CARGO_RELEASE_ARGS_EXT="-v --offline --target ${RUST_HOST_SYS}"
+    export CARGO_TARGET_DIR_EXT="${CARGO_TARGET_SUBDIR}"
+}
+
+do_compile() {
+    setup_environment
+
+    autotools_do_compile
+}
+
+do_install() {
+    setup_environment
+
+    autotools_do_install
+}
+
+FILES:${PN}:append = " ${datadir}/dbus-1 ${datadir}/polkit-1 ${datadir}/bash-completion"

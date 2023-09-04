@@ -1,0 +1,42 @@
+From 2d68838fe3bf2d54252197d743138e7c92177852 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Wed, 16 Aug 2023 20:48:40 +0000
+Subject: [PATCH] ellesmere: customize to work with our distro
+
+* Add the 'ellesmere' name during package type detection
+* We don't have lib64, so don't attempt to print it
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ init/init.c   | 1 -
+ src/ph_rpm.ml | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/init/init.c b/init/init.c
+index bc28c69..301cdb1 100644
+--- a/init/init.c
++++ b/init/init.c
+@@ -303,7 +303,6 @@ main ()
+   show_directory ("/");
+   show_directory ("/bin");
+   show_directory ("/lib");
+-  show_directory ("/lib64");
+   fflush (stderr);
+ 
+   exit (EXIT_FAILURE);
+diff --git a/src/ph_rpm.ml b/src/ph_rpm.ml
+index 783d1bb..c48d92f 100644
+--- a/src/ph_rpm.ml
++++ b/src/ph_rpm.ml
+@@ -32,7 +32,7 @@ let stringset_of_list pkgs =
+ let fedora_detect () =
+   Config.rpm <> "no" && Config.rpm2cpio <> "no" && rpm_is_available () &&
+     (Config.yumdownloader <> "no" || Config.dnf <> "no") &&
+-    (List.mem (Os_release.get_id ()) [ "fedora"; "rhel"; "centos"; "openEuler"; "anolis" ] ||
++    (List.mem (Os_release.get_id ()) [ "fedora"; "rhel"; "centos"; "openEuler"; "anolis"; "ellesmere" ] ||
+      try
+        (stat "/etc/redhat-release").st_kind = S_REG ||
+        (stat "/etc/fedora-release").st_kind = S_REG ||
+-- 
+2.35.5
+

@@ -1,0 +1,39 @@
+From 5eba2c5955a9789f7d947b78f08d422acd2d523e Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Tue, 1 Aug 2023 00:19:48 +0000
+Subject: [PATCH 2/2] sysprep: disable pods created for docs
+
+We can't run the tools since they are potentially cross built for a
+different architecture. Truncate these rules to get past this part of
+the build. Further evaluation will be needed to determine if this is a
+viable workaround for the long term.
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ sysprep/Makefile.am | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/sysprep/Makefile.am b/sysprep/Makefile.am
+index 4b29d4e..adbbe56 100644
+--- a/sysprep/Makefile.am
++++ b/sysprep/Makefile.am
+@@ -207,14 +207,10 @@ stamp-virt-sysprep.pod: virt-sysprep.pod sysprep-extra-options.pod sysprep-opera
+ 	touch $@
+ 
+ sysprep-extra-options.pod: virt-sysprep
+-	rm -f $@ $@-t
+-	$(top_builddir)/run $< --dump-pod-options > $@-t
+-	mv $@-t $@
++	touch $@
+ 
+ sysprep-operations.pod: virt-sysprep
+-	rm -f $@ $@-t
+-	$(top_builddir)/run $< --dump-pod > $@-t
+-	mv $@-t $@
++	touch $@
+ 
+ # Tests.
+ 
+-- 
+2.35.5
+

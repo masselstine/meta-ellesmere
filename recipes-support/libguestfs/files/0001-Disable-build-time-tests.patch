@@ -1,0 +1,67 @@
+From ff0339ac300a0d485e44ba5c1c2547be0dea74f1 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Mon, 17 Jul 2023 18:59:27 +0000
+Subject: [PATCH] Disable build time tests
+
+These are problematic and not useful when cross compiling
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ Makefile.am  | 6 +++---
+ configure.ac | 9 ---------
+ 2 files changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 5937044..36d9f39 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -24,7 +24,7 @@ SUBDIRS = common/mlstdutils generator
+ 
+ # Files and other test data used by the tests.  Must be before any
+ # tests run.
+-SUBDIRS += test-data
++#SUBDIRS += test-data
+ 
+ # Basic source for the library.
+ SUBDIRS += gnulib/lib
+@@ -44,7 +44,7 @@ SUBDIRS += appliance
+ endif
+ 
+ # Tests.
+-SUBDIRS += tests
++#SUBDIRS += tests
+ 
+ # Common code used by the tools.
+ SUBDIRS += common/edit
+@@ -55,7 +55,7 @@ SUBDIRS += common/visit
+ SUBDIRS += common/windows
+ 
+ # Small tools written in C.
+-SUBDIRS += test-tool fish rescue
++SUBDIRS += fish rescue
+ 
+ # bash-completion
+ SUBDIRS += bash
+diff --git a/configure.ac b/configure.ac
+index 15f5cbe..378e664 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -257,15 +257,6 @@ AC_CONFIG_FILES([Makefile
+                  ruby/ext/guestfs/extconf.rb
+                  rust/Makefile
+                  rust/Cargo.toml
+-                 test-data/Makefile
+-                 test-data/binaries/Makefile
+-                 test-data/blank-disks/Makefile
+-                 test-data/files/Makefile
+-                 test-data/phony-guests/Makefile
+-                 test-data/phony-guests/guests.xml
+-                 test-tool/Makefile
+-                 tests/Makefile
+-                 tests/disks/test-qemu-drive-libvirt.xml
+                  website/index.html])
+ 
+ AC_OUTPUT
+-- 
+2.35.5
+

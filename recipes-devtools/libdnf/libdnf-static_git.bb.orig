@@ -1,0 +1,7 @@
+#PN = "libdnf"
+
+require recipes-devtools/libdnf/libdnf_git.bb
+
+EXTRA_OECMAKE:append = "-DENABLE_STATIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+
+FILES:${PN}:append = " ${libdir}/libdnf"

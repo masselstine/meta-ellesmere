@@ -1,0 +1,37 @@
+From eab15590385b563a45b2b7d3bcb25c99d6a2b6e0 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Tue, 1 Aug 2023 00:17:23 +0000
+Subject: [PATCH 1/2] Disable build time tests
+
+We can't run these in a cross build environment.
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ Makefile.am | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index ca1fc03..c639d37 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -45,7 +45,7 @@ SUBDIRS += common/mlcustomize
+ endif
+ 
+ # Data used by the tests.
+-SUBDIRS += test-data
++#SUBDIRS += test-data
+ 
+ # virt-tools in C.
+ SUBDIRS += align cat diff df edit format inspector make-fs
+@@ -108,7 +108,7 @@ po/POTFILES: configure.ac
+ 	rm -f $@ $@-t
+ 	cd $(srcdir); \
+ 	find $(DIST_SUBDIRS) -name '*.c' | \
+-	grep -v -E '^(examples|gnulib|perl/(blib|examples)|po-docs|tests|test-data|bundled)/' | \
++	grep -v -E '^(examples|gnulib|perl/(blib|examples)|po-docs|tests|bundled)/' | \
+ 	grep -v -E '/((guestfs|rc)_protocol\.c|dummy\.c)$$' | \
+ 	grep -v -E '^python/utils\.c$$' | \
+ 	grep -v -E '^perl/lib/Sys/Guestfs\.c$$' | \
+-- 
+2.35.5
+

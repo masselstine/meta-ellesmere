@@ -1,0 +1,50 @@
+From 86fd6f3e86ab99d54a22b475aecccfc19bdff07e Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Sat, 21 Jan 2023 09:38:55 +0000
+Subject: [PATCH 01/10] rpm: New RPM database location in /usr/lib/sysimage/rpm
+
+A few years ago the RPM database was moved from /var to /usr.  This is
+now feeding through to Linux distros.
+
+http://lists.rpm.org/pipermail/rpm-maint/2017-October/006723.html
+https://fedoraproject.org/wiki/Changes/RelocateRPMToUsr
+https://src.fedoraproject.org/rpms/rpm/pull-request/21
+---
+ src/ph_rpm.ml | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/src/ph_rpm.ml b/src/ph_rpm.ml
+index 85557fe..2c199c1 100644
+--- a/src/ph_rpm.ml
++++ b/src/ph_rpm.ml
+@@ -236,12 +236,22 @@ let rpm_package_name pkg =
+   let rpm = rpm_of_pkg pkg in
+   rpm.name
+ 
++let rpmdb_locations = [
++  "/usr/lib/sysimage/rpm/rpmdb.sqlite";
++  "/var/lib/rpm/rpmdb.sqlite";
++  "/var/lib/rpm/Packages"
++]
++
++let find_rpmdb () =
++  let rec loop = function
++    | [] -> error "rpm: cannot locate RPM database; if this is a normal RPM-based Linux distro then this is probably a supermin bug"
++    | db :: rest ->
++       if Sys.file_exists db then db else loop rest
++  in
++  loop rpmdb_locations
++
+ let rpm_get_package_database_mtime () =
+-  (try
+-    lstat "/var/lib/rpm/rpmdb.sqlite"
+-   with Unix_error (ENOENT, _, _) ->
+-    lstat "/var/lib/rpm/Packages"
+-   ).st_mtime
++  (lstat (find_rpmdb ())).st_mtime
+ 
+ (* Return the best provider of a particular RPM requirement.
+  *
+-- 
+2.37.3
+

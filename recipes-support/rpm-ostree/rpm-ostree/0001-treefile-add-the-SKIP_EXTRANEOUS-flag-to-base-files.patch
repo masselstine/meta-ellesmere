@@ -1,0 +1,29 @@
+From 0f772bf1a14572b297b60f97b68807f15d7c4ef3 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Fri, 25 Aug 2023 23:18:54 +0000
+Subject: [PATCH] treefile: add the SKIP_EXTRANEOUS flag to base-files
+
+base-files needs to setup directories normally filtered for the
+purposes of ostree, this skirts the filter checks.
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ rust/src/treefile.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/rust/src/treefile.rs b/rust/src/treefile.rs
+index 3b05a7af..99c7c3ba 100644
+--- a/rust/src/treefile.rs
++++ b/rust/src/treefile.rs
+@@ -1903,7 +1903,7 @@ impl Treefile {
+         // Only set SKIP_EXTRANEOUS for packages we know need it, so that
+         // people doing custom composes don't have files silently discarded.
+         // (This will also likely need to be configurable).
+-        if pkg_name == "filesystem" || pkg_name == "rootfiles" {
++        if pkg_name == "filesystem" || pkg_name == "rootfiles" || pkg_name == "base-files" {
+             flags.insert(RpmImporterFlags::SKIP_EXTRANEOUS);
+         }
+ 
+-- 
+2.35.5
+

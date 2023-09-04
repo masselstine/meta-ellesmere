@@ -1,0 +1,52 @@
+From 1d95cee0ec5a27ee75831c18e2fc81d8d196a572 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Tue, 27 Jun 2023 16:04:16 -0400
+Subject: [PATCH] libdnf: disable remaining docs and tests
+
+Saves dependency on gtk-doc and cppunit.
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ rust/libdnf-sys/build.rs | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/rust/libdnf-sys/build.rs b/rust/libdnf-sys/build.rs
+index 303e8a44..f153c077 100644
+--- a/rust/libdnf-sys/build.rs
++++ b/rust/libdnf-sys/build.rs
+@@ -6,6 +6,7 @@ fn main() -> Result<()> {
+     let has_gpgme_pkgconfig = libs.get_by_name("gpgme").is_some();
+     let with_zck: u8 = libs.get_by_name("zck").is_some().into();
+     let with_rhsm = std::env::var_os("CARGO_FEATURE_RHSM").is_some();
++    let mut workdir = std::env::var_os("WORKDIR").unwrap_or_default();
+ 
+     // first, the submodule proper
+     let libdnf = cmake::Config::new("../../libdnf")
+@@ -23,17 +24,21 @@ fn main() -> Result<()> {
+         .define("SHARE_INSTALL_PREFIX:PATH", "/usr/libexec/rpm-ostree/share")
+         .define("ENABLE_STATIC:BOOL", "1")
+         .define("CMAKE_POSITION_INDEPENDENT_CODE", "ON")
+-        // We don't need docs
++        // We don't need docs or tests
++	.define("WITH_TESTS:BOOL", "0")
++	.define("WITH_GTKDOC:BOOL", "0")
+         .define("WITH_HTML:BOOL", "0")
+         .define("WITH_MAN:BOOL", "0")
+         .define(
+             "ENABLE_RHSM_SUPPORT:BOOL",
+             if with_rhsm { "1" } else { "0" },
+         )
+-        // Auto-enable zchunk, if present
+-        .define("WITH_ZCHUNK:BOOL", format!("{}", with_zck))
++        // Don't need zchunk
++        .define("WITH_ZCHUNK:BOOL", "0")
+         // Don't need bindings
+         .define("WITH_BINDINGS:BOOL", "0")
++	// Enable cross compilation
++	.define("CMAKE_TOOLCHAIN_FILE:PATH", format!("{workdir:?}/toolchain.cmake"))
+         // Needed in Koji at least because timestamps(?)
+         // cause cmake to rerun without our -D flags which
+         // breaks the build.
+-- 
+2.34.1
+

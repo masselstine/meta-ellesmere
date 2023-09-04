@@ -1,0 +1,125 @@
+From 3efe663421d94376694f292ca1fcf2732a82149f Mon Sep 17 00:00:00 2001
+From: Kate <kit.ty.kate@disroot.org>
+Date: Wed, 16 Nov 2022 19:59:36 +0000
+Subject: [PATCH 03/10] Restore compatibility with OCaml < 4.07
+
+---
+ src/mode_build.ml |  6 ++++--
+ src/supermin.ml   | 18 ++++++++++--------
+ src/utils.ml      |  6 ++++--
+ 3 files changed, 18 insertions(+), 12 deletions(-)
+
+diff --git a/src/mode_build.ml b/src/mode_build.ml
+index f81341d..f0e5e09 100644
+--- a/src/mode_build.ml
++++ b/src/mode_build.ml
+@@ -16,6 +16,8 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  *)
+ 
++let stdlib_stdout = stdout
++
+ open Unix
+ open Unix.LargeFile
+ open Printf
+@@ -123,7 +125,7 @@ let rec build debug
+       (PackageSet.cardinal packages);
+     if debug >= 2 then (
+       List.iter (printf "  - %s\n") pretty_packages;
+-      flush Stdlib.stdout
++      flush stdlib_stdout
+     )
+   );
+ 
+@@ -207,7 +209,7 @@ let rec build debug
+       (List.length files);
+     if debug >= 2 then (
+       List.iter (fun { ft_path = path } -> printf "  - %s\n" path) files;
+-      flush Stdlib.stdout
++      flush stdlib_stdout
+     )
+   );
+ 
+diff --git a/src/supermin.ml b/src/supermin.ml
+index bef9db6..d49c1e8 100644
+--- a/src/supermin.ml
++++ b/src/supermin.ml
+@@ -16,6 +16,8 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  *)
+ 
++let stdlib_stderr = stderr
++
+ open Unix
+ open Unix.LargeFile
+ open Printf
+@@ -296,27 +298,27 @@ let () =
+     main ()
+   with
+   | Unix.Unix_error (code, fname, "") -> (* from a syscall *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "error: %s: %s" fname (Unix.error_message code)
+   | Unix.Unix_error (code, fname, param) -> (* from a syscall *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "error: %s: %s: %s" fname (Unix.error_message code) param
+   | Failure msg ->                      (* from failwith/failwithf *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "failure: %s" msg
+   | Librpm.Multiple_matches (package, count) -> (* from librpm *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "RPM error: %d occurrences for %s" count package
+   | Invalid_argument msg ->             (* probably should never happen *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "internal error: invalid argument: %s" msg
+   | Assert_failure (file, line, char) -> (* should never happen *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "internal error: assertion failed at %s, line %d, char %d"
+        file line char
+   | Not_found ->                        (* should never happen *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "internal error: Not_found exception was thrown"
+   | exn ->                              (* something not matched above *)
+-     Printexc.print_backtrace Stdlib.stderr;
++     Printexc.print_backtrace stdlib_stderr;
+      error "exception: %s" (Printexc.to_string exn)
+diff --git a/src/utils.ml b/src/utils.ml
+index ae99294..1dc4310 100644
+--- a/src/utils.ml
++++ b/src/utils.ml
+@@ -16,6 +16,8 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  *)
+ 
++let stdlib_compare = compare
++
+ open Unix
+ open Unix.LargeFile
+ open Printf
+@@ -40,7 +42,7 @@ let dir_exists name =
+   try (stat name).st_kind = S_DIR
+   with Unix_error _ -> false
+ 
+-let uniq ?(cmp = Stdlib.compare) xs =
++let uniq ?(cmp = stdlib_compare) xs =
+   let rec loop acc = function
+     | [] -> acc
+     | [x] -> x :: acc
+@@ -51,7 +53,7 @@ let uniq ?(cmp = Stdlib.compare) xs =
+   in
+   List.rev (loop [] xs)
+ 
+-let sort_uniq ?(cmp = Stdlib.compare) xs =
++let sort_uniq ?(cmp = stdlib_compare) xs =
+   let xs = List.sort cmp xs in
+   let xs = uniq ~cmp xs in
+   xs
+-- 
+2.37.3
+

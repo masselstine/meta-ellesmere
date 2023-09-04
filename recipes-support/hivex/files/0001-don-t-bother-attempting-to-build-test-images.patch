@@ -1,0 +1,39 @@
+From 8281b6ae88bc2f5d991dce9a746454afa4cf0222 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Tue, 11 Jul 2023 19:35:01 +0000
+Subject: [PATCH] don't bother attempting to build test images
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ Makefile.am  | 2 +-
+ configure.ac | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 1eed480..0a3bc36 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -20,7 +20,7 @@ ACLOCAL_AMFLAGS = -I m4
+ # Work around broken libtool.
+ export to_tool_file_cmd=func_convert_file_noop
+ 
+-SUBDIRS = gnulib/lib generator lib images include
++SUBDIRS = gnulib/lib generator lib include
+ 
+ if HAVE_LIBXML2
+ SUBDIRS += xml
+diff --git a/configure.ac b/configure.ac
+index 946c261..fc7bb44 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -513,7 +513,6 @@ AC_CONFIG_FILES([Makefile
+                  extra-tests/Makefile
+                  generator/Makefile
+                  gnulib/lib/Makefile
+-                 images/Makefile
+                  include/Makefile
+                  lib/Makefile
+                  lib/hivex.pc
+-- 
+2.35.5
+
