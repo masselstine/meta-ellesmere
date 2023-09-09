@@ -22,11 +22,12 @@ do_compile:class-target() {
 
     # build 'ocamlrun*' which are run on the build host as part of the build, most likely not
     # an approach that will work for cross building for ARM?
-    oe_runmake MKEXE='$(BUILD_CC) $(OC_CFLAGS) $(BUILD_CFLAGS) $(OC_LDFLAGS) $(BUILD_LDFLAGS)' runtime-all
+    oe_runmake MKEXE='$(BUILD_CC) $(OC_CFLAGS) $(BUILD_CFLAGS) $(OC_LDFLAGS) $(BUILD_LDFLAGS)' BYTECCLIBS='-lpthread -lm -ldl' runtime-all
 
-    # actually build ocaml
-    oe_runmake world
-    oe_runmake opt
+    # actually build ocaml, use ocamlyacc form ocaml-native, despite the attempt above
+    # to avoid this, ocamlyacc seems to be overwritten in the while building world
+    oe_runmake OCAMLYACC=ocamlyacc world
+    oe_runmake OCAMLYACC=ocamlyacc opt
 
     # rebuild 'ocamlrun*' and 'ocamlyacc' for the target
     rm -f ${B}/yacc/ocamlyacc ${B}/yacc/*.o

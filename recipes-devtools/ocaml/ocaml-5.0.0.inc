@@ -4,6 +4,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=4f72f33f302a53dc329f4d3819fe14f9"
 
 SRC_URI = " \
     https://caml.inria.fr/pub/distrib/ocaml-5.0/ocaml-${PV}.tar.gz \
+    file://0001-stdlib-Makefile-always-assume-long-shebang.patch \
 "
 
 MAA = " \
