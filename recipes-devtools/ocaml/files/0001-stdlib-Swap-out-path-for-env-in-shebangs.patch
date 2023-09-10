@@ -1,0 +1,37 @@
+From c2ab76edff639be4e4248fe00063ad449d69eff2 Mon Sep 17 00:00:00 2001
+From: Mark Asselstine <mark.asselstine@windriver.com>
+Date: Sun, 10 Sep 2023 14:54:54 +0000
+Subject: [PATCH] stdlib: Swap out path for env in shebangs
+
+Signed-off-by: Mark Asselstine <mark.asselstine@windriver.com>
+---
+ stdlib/Makefile | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/stdlib/Makefile b/stdlib/Makefile
+index ac0ef4c..6d1d79c 100644
+--- a/stdlib/Makefile
++++ b/stdlib/Makefile
+@@ -134,17 +134,10 @@ CAMLHEADERS =\
+ # patterns and $(subst ...) since `camlheader%:` wouldn't match `camlheader`
+ ifeq "$(SHEBANGSCRIPTS)" "true"
+ camlhead%: $(ROOTDIR)/Makefile.config Makefile
+-ifeq "$(LONG_SHEBANG)" "true"
+-	echo '#!/bin/sh' > $@
+-	echo 'exec "$(BINDIR)/ocamlrun$(subst er,,$*)" "$$0" "$$@"' >> $@
+-else
+-	echo '#!$(BINDIR)/ocamlrun$(subst er,,$*)' > $@
+-endif
++	echo '#!/usr/bin/env ocamlrun$(subst er,,$*)' > $@
+ 
+-# TODO This does not take long shebangs into account (since TARGET_BINDIR is not
+-#      yet processed by configure)
+ target_%: $(ROOTDIR)/Makefile.config Makefile
+-	echo '#!$(TARGET_BINDIR)/ocamlrun$(subst camlheader,,$*)' > $@
++	echo '#!/usr/bin/env ocamlrun$(subst camlheader,,$*)' > $@
+ 
+ camlheader_ur: Makefile
+ 	echo '#!' | tr -d '\012' > $@
+-- 
+2.35.5
+

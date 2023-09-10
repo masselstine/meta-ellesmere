@@ -18,6 +18,10 @@ PN = "ocaml-cross-${TARGET_ARCH}"
 COMPATIBLE_HOST = "x86_64.*-linux"
 COMPATIBLE_MACHINE:x86-64 = "(.*)"
 
+SRC_URI:append = " \
+    file://0001-stdlib-Swap-out-path-for-env-in-shebangs.patch \
+"
+
 EXTRA_CONF = " \
     -host ${BUILD_SYS} \
     -target ${TARGET_SYS} \
@@ -45,18 +49,18 @@ do_configure:prepend:x86-64() {
 #    oe_runmake OCAMLLIB="${STAGING_LIBDIR_NATIVE}/ocaml" world.opt
 #}
 
-do_install:append() {
+#do_install:append() {
 #    rm "${D}${bindir}/ocamlrun"
-    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheader
-    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheaderi
-    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheaderd
+#    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheader
+#    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheaderi
+#    sed -i -e 's@#!.*/\(.[^/]\)@#!/usr/bin/env \1@' ${D}${libdir}/ocaml/camlheaderd
 
 #    (cd ${D}${prefix}/bin/${TARGET_SYS}
 #     for f in *; do
 #        mv ${f} ${TARGET_PREFIX}${f}
 #     done
 #     find * -type l -exec sh -c 'rm ${0} && ln -sf ${0}.opt ${0}' {} \;)
-}
+#}
 
 # Ignore how TARGET_ARCH is computed.
 TARGET_ARCH[vardepvalue] = "${TARGET_ARCH}"
